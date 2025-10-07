@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cteProc xmlns="http://www.portalfiscal.inf.br/cte" versao="3.00">
+    <CTe xmlns="http://www.portalfiscal.inf.br/cte">
+        <infCte Id="CTe35210512345678000190570010000000011234567890" versao="3.00">
+            <ide>
+                <cUF>35</cUF>
+                <cCT>12345678</cCT>
+                <CFOP>5353</CFOP>
+                <natOp>Prestação de Serviço de Transporte</natOp>
+                <mod>57</mod>
+                <serie>1</serie>
+                <nCT>1</nCT>
+                <dhEmi>2021-05-15T14:30:00-03:00</dhEmi>
+                <tpImp>1</tpImp>
+                <tpEmis>1</tpEmis>
+                <tpAmb>2</tpAmb>
+                <tpCTe>0</tpCTe>
+                <procEmi>0</procEmi>
+                <verProc>1.0</verProc>
+                <cMunEnv>3550308</cMunEnv>
+                <xMunEnv>São Paulo</xMunEnv>
+                <UFEnv>SP</UFEnv>
+                <modal>01</modal>
+                <tpServ>0</tpServ>
+                <cMunIni>3550308</cMunIni>
+                <xMunIni>São Paulo</xMunIni>
+                <UFIni>SP</UFIni>
+                <cMunFim>3304557</cMunFim>
+                <xMunFim>Rio de Janeiro</xMunFim>
+                <UFFim>RJ</UFFim>
+                <retira>1</retira>
+            </ide>
+            <emit>
+                <CNPJ>12345678000190</CNPJ>
+                <xNome>TRANSPORTADORA EXEMPLO LTDA</xNome>
+                <xFant>TRANSPORTADORA</xFant>
+                <enderEmit>
+                    <xLgr>Rua dos Transportes</xLgr>
+                    <nro>200</nro>
+                    <xBairro>Industrial</xBairro>
+                    <cMun>3550308</cMun>
+                    <xMun>São Paulo</xMun>
+                    <CEP>03000000</CEP>
+                    <UF>SP</UF>
+                    <cPais>1058</cPais>
+                    <xPais>BRASIL</xPais>
+                </enderEmit>
+                <IE>123456789012</IE>
+            </emit>
+            <rem>
+                <CNPJ>98765432000123</CNPJ>
+                <xNome>REMETENTE EXEMPLO LTDA</xNome>
+                <ender>
+                    <xLgr>Avenida Remetente</xLgr>
+                    <nro>300</nro>
+                    <xBairro>Centro</xBairro>
+                    <cMun>3550308</cMun>
+                    <xMun>São Paulo</xMun>
+                    <CEP>04000000</CEP>
+                    <UF>SP</UF>
+                    <cPais>1058</cPais>
+                    <xPais>BRASIL</xPais>
+                </ender>
+                <IE>987654321098</IE>
+            </rem>
+            <dest>
+                <CNPJ>11122233000144</CNPJ>
+                <xNome>DESTINATARIO EXEMPLO LTDA</xNome>
+                <ender>
+                    <xLgr>Rua Destinatario</xLgr>
+                    <nro>400</nro>
+                    <xBairro>Copacabana</xBairro>
+                    <cMun>3304557</cMun>
+                    <xMun>Rio de Janeiro</xMun>
+                    <CEP>22000000</CEP>
+                    <UF>RJ</UF>
+                    <cPais>1058</cPais>
+                    <xPais>BRASIL</xPais>
+                </ender>
+                <IE>111222333444</IE>
+            </dest>
+            <vPrest>
+                <vTPrest>850.00</vTPrest>
+                <vRec>850.00</vRec>
+            </vPrest>
+            <imp>
+                <ICMS>
+                    <ICMS00>
+                        <CST>00</CST>
+                        <vBC>850.00</vBC>
+                        <pICMS>12.00</pICMS>
+                        <vICMS>102.00</vICMS>
+                    </ICMS00>
+                </ICMS>
+            </imp>
+            <infCarga>
+                <vCarga>5000.00</vCarga>
+                <proPred>Mercadorias Diversas</proPred>
+                <xOutCat>Outras características</xOutCat>
+            </infCarga>
+        </infCte>
+    </CTe>
+</cteProc>
