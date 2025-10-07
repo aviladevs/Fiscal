@@ -20,7 +20,9 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             cnpj TEXT UNIQUE,
             nome TEXT,
-            endereco TEXT
+            endereco TEXT,
+            telefone TEXT,
+            email TEXT
         )
     """)
 
