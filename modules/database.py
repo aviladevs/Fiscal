@@ -49,5 +49,13 @@ def init_db():
         )
     """)
 
+    # Migration: Add data_sincronizacao column if it doesn't exist
+    try:
+        cur.execute("SELECT data_sincronizacao FROM notas LIMIT 1")
+    except sqlite3.OperationalError:
+        # Column doesn't exist, add it
+        cur.execute("ALTER TABLE notas ADD COLUMN data_sincronizacao TEXT")
+        print("Migration: Added data_sincronizacao column to notas table")
+
     conn.commit()
     conn.close()
