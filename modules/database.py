@@ -44,7 +44,8 @@ def init_db():
             numero TEXT,
             cnpj_emitente TEXT,
             nome_emitente TEXT,
-            valor_total REAL
+            valor_total REAL,
+            data_sincronizacao TEXT
         )
     """)
 

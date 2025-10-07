@@ -3,6 +3,8 @@ import os
 import time
 import json
 from datetime import datetime, timedelta
+from modules.sefaz_connector import consultar_e_sincronizar_nfes
+from modules import database
 
 SYNC_FILE = "data/ultima_sincronizacao.json"
 CERT_FILE = "data/certificados/certificado_a1.pfx"
@@ -68,22 +70,9 @@ def render():
         unsafe_allow_html=True
     )
 
-    # Cabeçalho com botão à direita
-    col1, col2 = st.columns([8, 1])
-    with col1:
-        st.markdown("<h2 style='font-weight:600; margin-bottom:0;'>🏛️ Integração SEFAZ</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='color:#666; margin-top:0;'>Gerencie suas notas fiscais com conexão segura e automática.</p>", unsafe_allow_html=True)
-    with col2:
-        btn_html = """
-        <button class="refresh-button" title="Atualizar SEFAZ" id="refresh-btn">🔄</button>
-        <script>
-        const btn = document.getElementById("refresh-btn");
-        btn.onclick = function() {
-            window.location.href = window.location.href + "?sync=1";
-        }
-        </script>
-        """
-        st.markdown(btn_html, unsafe_allow_html=True)
+    # Cabeçalho
+    st.markdown("<h2 style='font-weight:600; margin-bottom:0;'>🏛️ Integração SEFAZ</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#666; margin-top:0;'>Gerencie suas notas fiscais com conexão segura e automática.</p>", unsafe_allow_html=True)
 
     # Cartão principal
     st.markdown("<div class='glass'>", unsafe_allow_html=True)
@@ -102,24 +91,119 @@ def render():
 
     # Sincronização com controle de 1 hora
     last_sync = get_last_sync()
-    if "sync=1" in st.query_params:
+    
+    # Ambiente de consulta
+    ambiente = st.selectbox("🌐 Ambiente SEFAZ", ["homologacao", "producao"], 
+                           help="Use homologação para testes, produção para dados reais")
+    
+    col_sync1, col_sync2 = st.columns([1, 1])
+    
+    with col_sync1:
+        sync_button = st.button("🔄 Sincronizar com SEFAZ", type="primary", use_container_width=True)
+    
+    with col_sync2:
+        if st.button("📊 Ver Notas Sincronizadas", use_container_width=True):
+            st.session_state.show_notas = True
+    
+    if sync_button:
         if not os.path.exists(CERT_FILE):
             st.error("❌ Nenhum certificado encontrado. Faça o upload primeiro.")
         elif not last_sync or datetime.now() - last_sync >= timedelta(hours=1):
             if not senha:
                 st.error("❌ Não foi possível obter a senha do certificado.")
             else:
-                set_last_sync()
-                st.success("✅ Sincronização iniciada com sucesso!")
-                time.sleep(0.5)
-                st.info(f"Conectando à SEFAZ para o CNPJ {CNPJ if CNPJ else 'não informado'} e puxando notas...")
-                # Simulação de integração
-                time.sleep(2)
-                st.success("✅ Notas atualizadas com sucesso!")
+                with st.spinner("🔍 Consultando SEFAZ... Isso pode levar alguns minutos."):
+                    # Chama a integração real
+                    resultado = consultar_e_sincronizar_nfes(CERT_FILE, senha, ambiente)
+                    
+                    if resultado.get("sucesso"):
+                        set_last_sync()
+                        
+                        st.success("✅ Sincronização concluída com sucesso!")
+                        
+                        # Estatísticas
+                        documentos = resultado.get("documentos", [])
+                        total_docs = len(documentos)
+                        processados = len([d for d in documentos if d.get("processado", False)])
+                        
+                        col_stat1, col_stat2, col_stat3 = st.columns(3)
+                        with col_stat1:
+                            st.metric("📄 Documentos Encontrados", total_docs)
+                        with col_stat2:
+                            st.metric("✅ Processados", processados)
+                        with col_stat3:
+                            st.metric("⚠️ Erros", total_docs - processados)
+                        
+                        # Detalhes dos documentos
+                        if documentos:
+                            st.subheader("📋 Documentos Sincronizados")
+                            for i, doc in enumerate(documentos[:10]):  # Mostra apenas os primeiros 10
+                                with st.expander(f"📄 {doc.get('tipo', 'N/A')} - NSU: {doc.get('nsu', 'N/A')}"):
+                                    if doc.get("processado"):
+                                        st.write(f"**Chave:** {doc.get('chave', 'N/A')}")
+                                        st.write(f"**Emitente:** {doc.get('nome_emitente', 'N/A')}")
+                                        st.write(f"**CNPJ:** {doc.get('cnpj_emitente', 'N/A')}")
+                                        if doc.get('valor_total'):
+                                            st.write(f"**Valor:** R$ {doc.get('valor_total', 0):.2f}")
+                                    else:
+                                        st.error(f"Erro: {doc.get('erro', 'Não especificado')}")
+                                        
+                            if len(documentos) > 10:
+                                st.info(f"... e mais {len(documentos) - 10} documentos")
+                        
+                        # Informações da consulta
+                        st.info(f"📊 Status SEFAZ: {resultado.get('codigo_status')} - {resultado.get('motivo')}")
+                        st.info(f"🔢 Último NSU processado: {resultado.get('ultimo_nsu')}")
+                        
+                    else:
+                        st.error(f"❌ Erro na sincronização: {resultado.get('erro', 'Erro desconhecido')}")
+                        
+                        # Debug information
+                        if st.checkbox("🔧 Mostrar detalhes técnicos"):
+                            st.text_area("XML de resposta:", resultado.get('xml_completo', 'N/A'), height=200)
         else:
             restante = timedelta(hours=1) - (datetime.now() - last_sync)
             minutos = int(restante.total_seconds() // 60)
             st.warning(f"⚠️ Você já sincronizou há menos de 1 hora. Tente novamente em {minutos} minutos.")
+    
+    # Mostrar notas sincronizadas
+    if st.session_state.get('show_notas', False):
+        st.markdown("---")
+        st.subheader("📊 Notas Fiscais Sincronizadas")
+        
+        conn = database.get_connection()
+        
+        try:
+            import pandas as pd
+            df = pd.read_sql_query("""
+                SELECT tipo, numero, cnpj_emitente, nome_emitente, valor_total, data_sincronizacao
+                FROM notas 
+                WHERE data_sincronizacao IS NOT NULL
+                ORDER BY data_sincronizacao DESC
+                LIMIT 50
+            """, conn)
+            
+            if not df.empty:
+                # Formatar valores
+                df['valor_total'] = df['valor_total'].apply(lambda x: f"R$ {x:.2f}" if x > 0 else "N/A")
+                df['data_sincronizacao'] = pd.to_datetime(df['data_sincronizacao']).dt.strftime('%d/%m/%Y %H:%M')
+                
+                df.columns = ['Tipo', 'Número/Chave', 'CNPJ Emitente', 'Nome Emitente', 'Valor Total', 'Data Sincronização']
+                
+                st.dataframe(df, use_container_width=True, hide_index=True)
+                st.info(f"📊 Total de {len(df)} notas sincronizadas")
+                
+                # Botão para limpar visualização
+                if st.button("❌ Fechar lista"):
+                    st.session_state.show_notas = False
+                    st.rerun()
+            else:
+                st.info("📝 Nenhuma nota sincronizada ainda. Use o botão 'Sincronizar com SEFAZ' para buscar notas.")
+                
+        except Exception as e:
+            st.error(f"Erro ao carregar notas: {e}")
+        finally:
+            conn.close()
 
     last_sync = get_last_sync()
     if last_sync:
