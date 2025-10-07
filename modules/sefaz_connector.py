@@ -9,14 +9,21 @@ def carregar_certificado(pfx_bytes, senha):
     chave_privada = crypto.dump_privatekey(crypto.FILETYPE_PEM, pfx.get_privatekey())
     cert_pem = crypto.dump_certificate(crypto.FILETYPE_PEM, pfx.get_certificate())
 
-    # salva em arquivo temporário
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pem") as cert_file:
         cert_file.write(cert_pem + chave_privada)
         return cert_file.name
 
-def consultar_notas(cert_path, cnpj):
-    """Consulta notas da SEFAZ via WebService Distribuição DFe"""
-    url = "https://www1.nfe.fazenda.gov.br/NFeDistribuicaoDFe/NFeDistribuicaoDFe.asmx"
+
+def consultar_notas(cert_path, cnpj, ambiente="producao", uf="35"):
+    """Consulta notas na SEFAZ via NFeDistribuicaoDFe.
+    ambiente = 'producao' ou 'homologacao'
+    uf = código da UF (35 = SP, 41 = PR, 33 = RJ, etc.)
+    """
+    urls = {
+        "producao": "https://www1.nfe.fazenda.gov.br/NFeDistribuicaoDFe/NFeDistribuicaoDFe.asmx",
+        "homologacao": "https://hom.nfe.fazenda.gov.br/NFeDistribuicaoDFe/NFeDistribuicaoDFe.asmx",
+    }
+    url = urls.get(ambiente, urls["producao"])
 
     soap_xml = f"""<?xml version="1.0" encoding="utf-8"?>
     <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
@@ -24,8 +31,8 @@ def consultar_notas(cert_path, cnpj):
         <soapenv:Body>
             <nfe:nfeDistDFeInteresse>
                 <distDFeInt xmlns="http://www.portalfiscal.inf.br/nfe" versao="1.01">
-                    <tpAmb>1</tpAmb>
-                    <cUFAutor>35</cUFAutor> <!-- SP -->
+                    <tpAmb>{"1" if ambiente == "producao" else "2"}</tpAmb>
+                    <cUFAutor>{uf}</cUFAutor>
                     <CNPJ>{cnpj}</CNPJ>
                     <distNSU>
                         <ultNSU>000000000000000</ultNSU>
@@ -42,4 +49,4 @@ def consultar_notas(cert_path, cnpj):
         resp.raise_for_status()
         return resp.text
     except Exception as e:
-        return f"Erro na consulta: {e}"
+        return f"Erro na consulta SEFAZ ({ambiente}): {e}"
