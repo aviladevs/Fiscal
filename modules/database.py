@@ -1,28 +1,46 @@
 import sqlite3
+import os
 
-def conectar():
-    return sqlite3.connect("data/base.db")
+DB_PATH = "data/db.sqlite3"
 
-def criar_tabelas():
-    conn = conectar()
-    c = conn.cursor()
+def get_connection():
+    return sqlite3.connect(DB_PATH, check_same_thread=False)
 
-    c.execute('''
+def init_db():
+    os.makedirs("data", exist_ok=True)
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS clientes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cnpj TEXT UNIQUE,
             nome TEXT,
-            cnpj_cpf TEXT UNIQUE
+            endereco TEXT
         )
-    ''')
+    """)
 
-    c.execute('''
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS mercadorias (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            descricao TEXT,
             codigo TEXT UNIQUE,
-            valor_unit REAL
+            descricao TEXT,
+            ncm TEXT,
+            unidade TEXT,
+            preco REAL
         )
-    ''')
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS notas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tipo TEXT,
+            numero TEXT,
+            cnpj_emitente TEXT,
+            nome_emitente TEXT,
+            valor_total REAL
+        )
+    """)
 
     conn.commit()
     conn.close()
