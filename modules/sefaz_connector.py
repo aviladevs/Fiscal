@@ -43,7 +43,7 @@ def extrair_cnpj_certificado(certificado):
         print(f"Erro ao extrair CNPJ: {e}")
         return None
 
-def consultar_notas_distribuicao_dfe(cert_path, cnpj, ambiente="homologacao", uf="35", ultimo_nsu="000000000000000"):
+def consultar_notas_distribuicao_dfe(cert_path, cnpj, ambiente="producao", uf="35", ultimo_nsu="000000000000000"):
     """
     Consulta notas na SEFAZ via NFeDistribuicaoDFe.
     Esta é a forma oficial de consultar NFes destinadas ao CNPJ
@@ -53,7 +53,7 @@ def consultar_notas_distribuicao_dfe(cert_path, cnpj, ambiente="homologacao", uf
         "homologacao": "https://hom.nfe.fazenda.gov.br/NFeDistribuicaoDFe/NFeDistribuicaoDFe.asmx",
     }
     
-    url = urls.get(ambiente, urls["homologacao"])
+    url = urls.get(ambiente, urls["producao"])
     cnpj_limpo = ''.join(filter(str.isdigit, cnpj))
 
     soap_xml = f"""<?xml version="1.0" encoding="utf-8"?>
@@ -270,7 +270,7 @@ def salvar_documento_no_banco(dados):
     except Exception as e:
         print(f"Erro ao salvar no banco: {e}")
 
-def consultar_e_sincronizar_nfes(cert_path, senha, ambiente="homologacao"):
+def consultar_e_sincronizar_nfes(cert_path, senha, ambiente="producao"):
     """Função principal para consultar e sincronizar NFes"""
     try:
         # Carrega certificado e extrai CNPJ

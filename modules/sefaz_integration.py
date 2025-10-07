@@ -92,9 +92,9 @@ def render():
     # Sincronização com controle de 1 hora
     last_sync = get_last_sync()
     
-    # Ambiente de consulta
-    ambiente = st.selectbox("🌐 Ambiente SEFAZ", ["homologacao", "producao"], 
-                           help="Use homologação para testes, produção para dados reais")
+    # Sempre usar ambiente de produção
+    ambiente = "producao"
+    st.info("🌐 **Ambiente:** Produção (dados reais da SEFAZ)")
     
     col_sync1, col_sync2 = st.columns([1, 1])
     
