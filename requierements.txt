@@ -1,0 +1,7 @@
+streamlit
+pandas
+xmltodict
+pycryptodome
+requests
+sqlite-utils
+pynfe
