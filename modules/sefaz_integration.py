@@ -7,6 +7,10 @@ from datetime import datetime, timedelta
 SYNC_FILE = "data/ultima_sincronizacao.json"
 CERT_FILE = "data/certificados/certificado_a1.pfx"
 
+# Recupera variáveis de ambiente
+CERT_PASSWORD_ENV = os.environ.get("CERT_PASSWORD")
+CNPJ = os.environ.get("CNPJ")
+
 def get_last_sync():
     if os.path.exists(SYNC_FILE):
         with open(SYNC_FILE, "r") as f:
@@ -87,7 +91,10 @@ def render():
     # Upload certificado A1
     st.subheader("🔐 Certificado Digital A1")
     uploaded_cert = st.file_uploader("Selecione seu arquivo .pfx", type=["pfx"], key="upload_cert")
-    senha = st.text_input("Senha do certificado", type="password", key="senha_cert")
+    
+    # Prioriza senha do certificado via variável de ambiente
+    senha = CERT_PASSWORD_ENV if CERT_PASSWORD_ENV else st.text_input("Senha do certificado", type="password", key="senha_cert")
+
     if uploaded_cert and senha:
         save_cert(uploaded_cert.getvalue())
         st.success("✅ Certificado armazenado com sucesso.")
@@ -99,13 +106,16 @@ def render():
         if not os.path.exists(CERT_FILE):
             st.error("❌ Nenhum certificado encontrado. Faça o upload primeiro.")
         elif not last_sync or datetime.now() - last_sync >= timedelta(hours=1):
-            set_last_sync()
-            st.success("✅ Sincronização iniciada com sucesso!")
-            time.sleep(0.5)
-            st.info("Conectando à SEFAZ e puxando notas...")
-            # Simulação de integração
-            time.sleep(2)
-            st.success("✅ Notas atualizadas com sucesso!")
+            if not senha:
+                st.error("❌ Não foi possível obter a senha do certificado.")
+            else:
+                set_last_sync()
+                st.success("✅ Sincronização iniciada com sucesso!")
+                time.sleep(0.5)
+                st.info(f"Conectando à SEFAZ para o CNPJ {CNPJ if CNPJ else 'não informado'} e puxando notas...")
+                # Simulação de integração
+                time.sleep(2)
+                st.success("✅ Notas atualizadas com sucesso!")
         else:
             restante = timedelta(hours=1) - (datetime.now() - last_sync)
             minutos = int(restante.total_seconds() // 60)
